@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>C:/Users/User/Desktop/images/copy.png</file>
+        <file>C:/Users/User/Desktop/images/cut.png</file>
+        <file>C:/Users/User/Desktop/images/new.png</file>
+        <file>C:/Users/User/Desktop/images/open.png</file>
+        <file>C:/Users/User/Desktop/images/paste.png</file>
+        <file>C:/Users/User/Desktop/images/Redo.png</file>
+        <file>C:/Users/User/Desktop/images/save.png</file>
+        <file>C:/Users/User/Desktop/images/Save-as.png</file>
+        <file>C:/Users/User/Desktop/images/Undo.png</file>
+        <file>C:/Users/User/Desktop/images/About.png</file>
+        <file>C:/Users/User/Desktop/images/bond.png</file>
+        <file>C:/Users/User/Desktop/images/images.png</file>
+    </qresource>
+</RCC>
