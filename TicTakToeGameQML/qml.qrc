@@ -1,7 +1,9 @@
 <RCC>
     <qresource prefix="/">
+    
         <file>main.qml</file>
         <file>TicTakToe.qml</file>
         <file>Cell.qml</file>
+        
     </qresource>
 </RCC>
