@@ -1,5 +1,4 @@
 // Created by Vecnik88
-
 /*
  *      Simple game Tic Tak Toe for two players
  */
