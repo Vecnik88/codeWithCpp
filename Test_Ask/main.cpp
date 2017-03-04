@@ -66,11 +66,28 @@ using Pool = std::list<Range>;                              // <---. объяв�
 Pool find_diff(const Pool& old_pool, const Pool& new_pool);
 bool eq(const Pool& expired, const Pool& expected);
 void print_pool(const Pool& pool);
+Pool sortAndMerge(Pool& pool);
+
+bool mycomparison (const Range& a, const Range& b)          // <---. предикат
+{ return ( a.first < b.first ); }
 
 int main()
 {
-        // ### TEST
+    // ### Test ###
+
     const uint32_t max = std::numeric_limits<uint32_t>::max();
+    { // похожие диаппазоны, много пересечений, равные первые и последние элементы
+    Pool oldp {{23,45}, {134,156}, {234,256}, {334,356}, {434,456}, {4,6}, {3,5}, {500,563}, {334,536},{134,535}, {34,56}, {900,956},{1001,1002},{5000,5002}};
+    oldp = sortAndMerge(oldp);
+    Pool oldp1 {{23,45}, {134,156}, {234,256}, {334,356}, {434,456}, {4,6}, {3,5}, {500,563}, {334,536},{134,135}, {34,56}, {900,956},{980,1001},{5000,5001}};
+    oldp1 = sortAndMerge(oldp1);
+    auto expired = find_diff(oldp, oldp1);
+    
+    expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
+    assert(eq(expired, {{157, 233}, {257, 333}, {1002,1002}, {5002, 5002}}));
+    print_pool(expired);
+    }
     { // Empty pools:
         auto expired = find_diff({}, {});
         assert(eq(expired, {}));
@@ -88,42 +105,95 @@ int main()
     { // No crossing:
         Pool old_pool = {{10, 15}};
         Pool new_pool = {{5, 8}, {20, 21}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
         assert(eq(expired, {{10, 15}}));
         print_pool(expired);
     }
     { // crossing
-        Pool old_pool {{1, 10}, {11,19}, {1,40}, {1, 50}};
-        Pool new_pool {{6,19}};
+        Pool old_pool {{1, 10}, {11,19}, {19,40}};      // <---. должен получиться 1 диапазон
+        Pool new_pool {{12,19}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
-        assert(eq(expired, {{1,5}, {20,40}, {1,5}, {1,5}, {20,50}}));
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
+        assert(eq(expired, {{1,11}, {20,40}}));
         print_pool(expired);
     }
     { // crossing
         Pool old_pool {{55,90}};
         Pool new_pool {{15, 16}, {15,16}, {4,5}, {56,90}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
         assert(eq(expired, {{55,55}}));
         print_pool(expired);
     }
     { // Overlapping at higher end only:
         Pool old_pool = {{10, 17}};
         Pool new_pool = {{15, 20}, {24, 30}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
         assert(eq(expired, {{10, 14}}));
+        print_pool(expired);
+    }
+    {
+        Pool old_pool = {{22,32},{18, 33}};
+        Pool new_pool = {{15, 20}, {24, 30}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
+        auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
+        assert(eq(expired, {{21, 23}, {31,33}}));
+        print_pool(expired);
+    }
+    {
+        Pool old_pool = {{22,32},{18, 33},{18,33}, {23,30}, {12,45}};
+        Pool new_pool = {{15, 20}, {4, 120}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
+        auto expired = find_diff(old_pool, new_pool);
+        assert(eq(expired, {}));
+        print_pool(expired);
+    }
+    {
+        Pool old_pool = {{2,32},{18, 3159},{7565,7888}, {23,30}, {2,2}};
+        Pool new_pool = {{15, 20}, {4, 754}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
+        auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
+        assert(eq(expired, {{2,3},{755,3159}, {7565,7888}}));
         print_pool(expired);
     }
 }
 
-// algorithm
+// algorithm search old pool
 Pool find_diff(const Pool& old_pool, const Pool& new_pool)
 {
     Pool result;
 
-    for(const auto& old_p : old_pool)                       // <---. C++11, семантика питона, обращаемся к каждому эл-ту в контейнере
+    for(const auto& old_p : old_pool)                               // <---. C++11, семантика питона, обращаемся к каждому эл-ту в контейнере
     {
-        result.push_front({old_p.first, old_p.second});     // <---. заносим элемент вначало
-        auto first_element_result = result.begin();         // <---. создаем итератор на первый элемент
+        result.push_front({old_p.first, old_p.second});             // <---. заносим элемент вначало
+        auto first_element_result = result.begin();                 // <---. создаем итератор на первый элемент
 
         for(auto new_p = new_pool.begin(); new_p != new_pool.end(); ++new_p) // <---. пока не достигнем конца нового пула
         {
@@ -135,7 +205,7 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
                     break;
                 }
 
-                else if(first_element_result->first >= new_p->second)         // <---. если превышает диапазон
+                else if(first_element_result->first > new_p->second)         // <---. если превышает диапазон
                 {
                     continue;
                 }
@@ -149,7 +219,8 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
             {
                 if(first_element_result->second < new_p->first)
                 {
-                    continue;
+                    //continue;
+                    break;
                 }
                 else if(first_element_result->second <= new_p->second)
                     {
@@ -157,10 +228,10 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
                     }
                 else    // <---. if first < first.old and second > second.old
                 {
-                    result.push_back({first_element_result->first, (new_p->first-1)});
+                    result.insert(next(first_element_result), {first_element_result->first, (new_p->first-1)});
                     first_element_result->first = (new_p->second + 1);
 
-                        // используем рекурсию, если новый пул разбивает наш старый диапазон на 2
+                    // используем рекурсию, если новый пул разбивает наш старый диапазон на 2
                     result = find_diff(result, new_pool);
                 }
             }
@@ -168,11 +239,64 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
     }
    return result;
 }
+
+// ### sorting and merge pool ###
+Pool sortAndMerge(Pool& pool)               // <---. может изменить передаваемый контейнер
+{
+    if(pool.size() > 1)                     // <---. если в пуле больше 1 элемента, иначе нет смысла
+    {
+        pool.sort(mycomparison);            // <---. можно использовать также stable_sort ###
+
+        Pool mergeContainer;
+
+        auto it1 = pool.begin();            // <---. начало списка
+        auto it2 = next(pool.begin());      // <---. следующий элемент
+
+        while(it2!=pool.end())
+        {
+            //{1,20}, {1,43}, {1,43}, {2,43}, {5,43}, {9,56}, {12,43}, {12,43}, {12,463}, {20,456}, {22,43}
+            if(it1->second > it2->first)
+            {
+                if(it1->second >= it2->second)
+                {
+                    ++it2;
+                }
+                else
+                {
+                    it1->second = it2->second;
+                    ++it2;                          // <---. так работает быстрее
+                }
+            }
+            else
+            {
+                if(it1->second+1 == it2->first || it1->second == it2->first)
+                {
+                    it1->second = it2->second;
+                    ++it2;
+                }
+                else
+                {
+                    mergeContainer.push_back({it1->first, it1->second});
+                    it1 = it2;
+                    ++it2;
+                }
+            }
+
+        }
+        mergeContainer.push_back({it1->first, it1->second});
+        return mergeContainer;
+    }
+    else
+        return pool;
+}
+// ### function for test ###
+
 // enter pair for display
 void print_range(const Range& range)
 {
     std::cout << "[" << range.first << "; " << range.second << "] ";
 }
+
 // enter container pool for display
 void print_pool(const Pool& pool)
 {
@@ -181,6 +305,7 @@ void print_pool(const Pool& pool)
     }
     std::cout << std::endl;
 }
+
 // return true if expired = expected, else false
 bool eq(const Pool& expired, const Pool& expected)
 {
