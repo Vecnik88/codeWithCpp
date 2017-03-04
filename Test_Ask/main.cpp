@@ -2,6 +2,7 @@
 
 // Исправлено 2.03.2017 - изменен алгоритм поиска
 //            4.03.2017 - изменен алгоритм поиска, добавлена возможность сортировки и слияние одинаковых диапазонов
+
 /*
         В одном из наших продуктов реализован DHCP-сервер, который выдаёт конечным пользователям IP-адреса
         из пула. Пул представляет собой набор диапазонов адресов IPv4. При изменении настроек пула
@@ -83,8 +84,8 @@ int main()
     Pool oldp1 {{23,45}, {134,156}, {234,256}, {334,356}, {434,456}, {4,6}, {3,5}, {500,563}, {334,536},{134,135}, {34,56}, {900,956},{980,1001},{5000,5001}};
     oldp1 = sortAndMerge(oldp1);
     auto expired = find_diff(oldp, oldp1);
-    
-    expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+
+    expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
     assert(eq(expired, {{157, 233}, {257, 333}, {1002,1002}, {5002, 5002}}));
     print_pool(expired);
@@ -110,7 +111,7 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{10, 15}}));
         print_pool(expired);
@@ -122,7 +123,7 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{1,11}, {20,40}}));
         print_pool(expired);
@@ -134,7 +135,7 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{55,55}}));
         print_pool(expired);
@@ -146,7 +147,7 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{10, 14}}));
         print_pool(expired);
@@ -158,7 +159,7 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{21, 23}, {31,33}}));
         print_pool(expired);
@@ -179,9 +180,21 @@ int main()
         new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
-        expired.sort(mycomparison); // <---. выводится неотсортированным, можно отсортировать для удобства проверки результатов
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
 
         assert(eq(expired, {{2,3},{755,3159}, {7565,7888}}));
+        print_pool(expired);
+    }
+    {
+        Pool old_pool = {{15,32},{18, 39},{75,78}, {23,30}, {2,2}};
+        Pool new_pool = {{15, 20}, {4, 7}, {13,24}, {45,67}};
+        old_pool = sortAndMerge(old_pool);
+        new_pool = sortAndMerge(new_pool);
+        auto expired = find_diff(old_pool, new_pool);
+
+        expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
+
+        assert(eq(expired, {{2,2},{25,39}, {75,78}}));
         print_pool(expired);
     }
 }
@@ -229,11 +242,19 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
                     }
                 else    // <---. if first < first.old and second > second.old
                 {
+                    Pool intermediatePool = find_diff({{new_p->second+1, first_element_result->second}}, new_pool);
+                    auto iterP = intermediatePool.begin();
+
+                    result.insert(next(first_element_result),{iterP->first, iterP->second});
+                    first_element_result->second = new_p->first-1;
+
+                    /* более медленный и затратный вариант
                     result.insert(next(first_element_result), {first_element_result->first, (new_p->first-1)});
                     first_element_result->first = (new_p->second + 1);
 
-                    // используем рекурсию, если новый пул разбивает наш старый диапазон на 2
+                    используем рекурсию, если новый пул разбивает наш старый диапазон на 2
                     result = find_diff(result, new_pool);
+                    */
                 }
             }
         }
