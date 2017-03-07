@@ -2,6 +2,7 @@
 
 // Исправлено 2.03.2017 - изменен алгоритм поиска
 //            4.03.2017 - изменен алгоритм поиска, добавлена возможность сортировки и слияние одинаковых диапазонов
+//            7.03.2017 - изменен алгоритм поиска
 
 /*
         В одном из наших продуктов реализован DHCP-сервер, который выдаёт конечным пользователям IP-адреса
@@ -107,8 +108,6 @@ int main()
     { // No crossing:
         Pool old_pool = {{10, 15}};
         Pool new_pool = {{5, 8}, {20, 21}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -119,8 +118,6 @@ int main()
     { // crossing
         Pool old_pool {{1, 10}, {11,19}, {19,40}};      // <---. должен получиться 1 диапазон
         Pool new_pool {{12,19}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -131,8 +128,6 @@ int main()
     { // crossing
         Pool old_pool {{55,90}};
         Pool new_pool {{15, 16}, {15,16}, {4,5}, {56,90}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -143,8 +138,6 @@ int main()
     { // Overlapping at higher end only:
         Pool old_pool = {{10, 17}};
         Pool new_pool = {{15, 20}, {24, 30}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -155,8 +148,6 @@ int main()
     {
         Pool old_pool = {{22,32},{18, 33}};
         Pool new_pool = {{15, 20}, {24, 30}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -167,8 +158,6 @@ int main()
     {
         Pool old_pool = {{22,32},{18, 33},{18,33}, {23,30}, {12,45}};
         Pool new_pool = {{15, 20}, {4, 120}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
         assert(eq(expired, {}));
         print_pool(expired);
@@ -176,8 +165,6 @@ int main()
     {
         Pool old_pool = {{2,32},{18, 3159},{7565,7888}, {23,30}, {2,2}};
         Pool new_pool = {{15, 20}, {4, 754}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -188,8 +175,6 @@ int main()
     {
         Pool old_pool = {{15,32},{18, 39},{75,78}, {23,30}, {2,2}};
         Pool new_pool = {{15, 20}, {4, 7}, {13,24}, {45,67}};
-        old_pool = sortAndMerge(old_pool);
-        new_pool = sortAndMerge(new_pool);
         auto expired = find_diff(old_pool, new_pool);
 
         expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
@@ -197,20 +182,37 @@ int main()
         assert(eq(expired, {{2,2},{25,39}, {75,78}}));
         print_pool(expired);
     }
+    {
+    Pool old_pool {{0,0},{2,3},{5, 101}, {400,455}, {500,790}};
+    Pool new_pool {{5, 6}, {8, 12}};
+    old_pool = sortAndMerge(old_pool);
+    new_pool = sortAndMerge(new_pool);
+    auto expired = find_diff(old_pool, new_pool);
+
+    expired.sort(mycomparison); // <---. выводится неотсортированным, сортируем для удобства тестов
+
+    assert(eq(expired, {{0,0},{2,3},{7,7}, {13,101}, {400,455}, {500, 790}}));
+    print_pool(expired);
+    }
 }
 
 // algorithm search old pool
 Pool find_diff(const Pool& old_pool, const Pool& new_pool)
 {
     Pool result;
+    Pool old_pool1 = old_pool;
+    Pool new_pool1 = new_pool;
+    old_pool1 = sortAndMerge(old_pool1);
+    new_pool1 = sortAndMerge(new_pool1);
 
-    for(const auto& old_p : old_pool)                               // <---. C++11, семантика питона, обращаемся к каждому эл-ту в контейнере
+    for(auto old_p = old_pool1.begin(); old_p != old_pool1.end(); ++old_p)
     {
-        result.push_front({old_p.first, old_p.second});             // <---. заносим элемент вначало
-        auto first_element_result = result.begin();                 // <---. создаем итератор на первый элемент
+        result.push_front({old_p->first, old_p->second});                                       // <---. заносим элемент вначало
+        auto first_element_result = result.begin();                                             // <---. создаем итератор на первый элемент
 
-        for(auto new_p = new_pool.begin(); new_p != new_pool.end(); ++new_p) // <---. пока не достигнем конца нового пула
+        for(auto new_p = new_pool1.begin(); new_p != new_pool1.end(); ++new_p)                  // <---. пока не достигнем конца нового пула
         {
+            // ### первая часть - if first >= first.new ###
             if(first_element_result->first >= new_p->first)
             {
                 if(first_element_result->second <= new_p->second)
@@ -219,21 +221,22 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
                     break;
                 }
 
-                else if(first_element_result->first > new_p->second)         // <---. если превышает диапазон
+                else if(first_element_result->first > new_p->second)                            // <---. если превышает диапазон
                 {
                     continue;
                 }
-                else    // <---. if first > first.old, but first < second.old and second > second.old
+                else                                                                            // <---. if first > first.old, but first < second.old and second > second.old
                 {
                     first_element_result->first = (new_p->second +1);
                 }
             }
 
+            // ### вторая часть - if first < first.new ###
+
             if(first_element_result->first < new_p->first)
             {
                 if(first_element_result->second < new_p->first)
                 {
-                    //continue;
                     break;
                 }
                 else if(first_element_result->second <= new_p->second)
@@ -242,19 +245,8 @@ Pool find_diff(const Pool& old_pool, const Pool& new_pool)
                     }
                 else    // <---. if first < first.old and second > second.old
                 {
-                    Pool intermediatePool = find_diff({{new_p->second+1, first_element_result->second}}, new_pool);
-                    auto iterP = intermediatePool.begin();
-
-                    result.insert(next(first_element_result),{iterP->first, iterP->second});
-                    first_element_result->second = new_p->first-1;
-
-                    /* более медленный и затратный вариант
-                    result.insert(next(first_element_result), {first_element_result->first, (new_p->first-1)});
-                    first_element_result->first = (new_p->second + 1);
-
-                    используем рекурсию, если новый пул разбивает наш старый диапазон на 2
-                    result = find_diff(result, new_pool);
-                    */
+                    result.push_back({first_element_result->first, new_p->first-1});
+                    first_element_result->first = new_p->second+1;
                 }
             }
         }
@@ -276,7 +268,6 @@ Pool sortAndMerge(Pool& pool)               // <---. может изменить
 
         while(it2!=pool.end())
         {
-            //{1,20}, {1,43}, {1,43}, {2,43}, {5,43}, {9,56}, {12,43}, {12,43}, {12,463}, {20,456}, {22,43}
             if(it1->second > it2->first)
             {
                 if(it1->second >= it2->second)
@@ -286,7 +277,7 @@ Pool sortAndMerge(Pool& pool)               // <---. может изменить
                 else
                 {
                     it1->second = it2->second;
-                    ++it2;                          // <---. так работает быстрее
+                    ++it2;
                 }
             }
             else
