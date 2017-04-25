@@ -31,13 +31,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct table
+typedef struct Table
 {
     unsigned int ref_table;                     // <---. ссылка на родительскую таблицу
     unsigned int height_table;                  // <---. глубина таблицы
-} table;
+} Table;
 
-unsigned int search_ref_for_table(table* tabl, unsigned int number);
+unsigned int search_ref_for_table(Table* tabl, unsigned int number);
 
 int main()
 {
@@ -52,7 +52,7 @@ int main()
 
     scanf("%d%d", &n, &m);
 
-    table* arrayTable = (table*)calloc(n, sizeof(table));       // <---. создаем массив для таблиц
+    Table* arrayTable = (Table*)calloc(n, sizeof(Table));       // <---. создаем массив для таблиц
 
     for(i = 0; i < n; ++i)
     {
@@ -88,7 +88,7 @@ int main()
     return 0;
 }
 
-unsigned int search_ref_for_table(table* tabl, unsigned int number)
+unsigned int search_ref_for_table(Table* tabl, unsigned int number)
 {
     if( tabl[number].ref_table != number)
         tabl[number].ref_table = search_ref_for_table(tabl, tabl[number].ref_table);
