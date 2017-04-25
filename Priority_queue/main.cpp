@@ -1,4 +1,4 @@
-// created by Vecnik88
+/* created by Vecnik88 */
 /*
                         Параллельная обработка
 
