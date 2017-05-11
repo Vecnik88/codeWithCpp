@@ -324,4 +324,3 @@ void MainWindow::on_actionInfo_triggered()
                 "\tThe possibility of cutting the text, copying and pasting it,"
                 "also made two keys - return one step back and one step forward."));
 }
-
