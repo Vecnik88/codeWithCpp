@@ -325,3 +325,4 @@ void MainWindow::on_actionInfo_triggered()
                 "also made two keys - return one step back and one step forward."));
 }
 
+

@@ -1,13 +1,13 @@
 // ### Created by Vecnik88
 
 /*
-        Создано 25.02.2017, исполнитель Vecnik88
+        Создано 25.04.2017, исполнитель Vecnik88
         Реализовано приложение текстового редактора с возможностью шифрование исходного текста
         и сохранения его в последствии в новый текстовый документ.
         Реализована возможность вырезания текста, его вставка и копирование,
         также сделаны две клавиши - возврат на шаг назад и на шаг вперед.
 
-        Created 25.02.2017, Vecnik88 artist
+        Created 25.04.2017, Vecnik88 artist
         Implemented a text editor application with the ability to encrypt the source code
         and save it later in a new text document.
         The possibility of cutting the text, copying and pasting it,
@@ -67,4 +67,3 @@ private:
 };
 
 #endif // MAINWINDOW_H
-
