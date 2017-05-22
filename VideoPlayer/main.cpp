@@ -1,5 +1,4 @@
 // Create Vecnik88
-
 #include "mainwindow.h"
 #include <QApplication>
 
@@ -11,3 +10,4 @@ int main(int argc, char *argv[])
 
     return a.exec();
 }
+
